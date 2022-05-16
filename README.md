@@ -1,2 +1,2 @@
 # vertxpractice
-verx.x learning
+vert.x learning
