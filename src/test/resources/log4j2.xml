@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="info">  
+  <appenders>  
+    <Console name="Console" target="SYSTEM_OUT">  
+      <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>  
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %class{36} %L %M - %msg%xEx%n"/>  
+    </Console>  
+    <RollingFile name="RollingFile" fileName="logs/app.log"  
+                 filePattern="logs/$${date:yyyy-MM}/app-%d{MM-dd-yyyy}-%i.log.gz">  
+      <PatternLayout pattern="%d{yyyy.MM.dd 'at' HH:mm:ss z} %-5level %class{36} %L %M - %msg%xEx%n"/>  
+      <SizeBasedTriggeringPolicy size="200MB"/>  
+    </RollingFile>  
+  </appenders>  
+  <loggers>  
+    <logger name="pers.zcc.**.dao" level="debug" additivity="false">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/> 
+    </logger>
+    
+    <logger name="org.springframework" level="info" additivity="false">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/> 
+    </logger>
+    
+    <logger name="org.apache" level="info" additivity="false">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/> 
+    </logger>
+    
+    <logger name="org.mybatis" level="info" additivity="false">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/> 
+    </logger>
+    
+    <logger name="io.netty" level="info" additivity="false">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/> 
+    </logger>
+    
+    <logger name="com.digitalpetri" level="info" additivity="false">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/> 
+    </logger>
+
+    <root level='debug'>  
+      <appender-ref ref="RollingFile"/>  
+      <appender-ref ref="Console"/>  
+    </root>  
+  </loggers> 
+
+</configuration>
