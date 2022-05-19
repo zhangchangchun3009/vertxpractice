@@ -1,6 +1,8 @@
 package pers.zcc.vertxprc.verticle;
 
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,10 +16,20 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.NetServerOptions;
+import io.vertx.core.shareddata.LocalMap;
+import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
 import pers.zcc.vertxprc.router.MainRouter;
 
 public class MainVerticle extends AbstractVerticle {
+
+    public static final String APPLICATION_CONFIG = "applicationConfig";
+
+    private static LocalMap<String, Object> applicationConfig;
+
+    public static Map<String, Object> getApplicationConfig() {
+        return Collections.unmodifiableMap(applicationConfig);
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class);
 
@@ -32,7 +44,9 @@ public class MainVerticle extends AbstractVerticle {
                 JsonObject jsonObject = res.result();
                 JsonObject config = config();
                 config.mergeIn(jsonObject, true);
-
+                SharedData sd = vertx.sharedData();
+                applicationConfig = sd.getLocalMap(APPLICATION_CONFIG);
+                applicationConfig.putAll(config.getMap());
                 HttpServer httpServer = createWebServer(startPromise, config);
 
                 listenOnShutdownSocket(httpServer, config, startPromise);

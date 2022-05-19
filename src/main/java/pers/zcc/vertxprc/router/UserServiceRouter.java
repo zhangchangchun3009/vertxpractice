@@ -11,7 +11,7 @@ public class UserServiceRouter implements IRouterCreator {
         Router router = Router.router(vertx);
         UserService userService = new UserService();
         router.get("/userService/getUser").handler(userService::getUser);
-        router.post("/userService/insert").handler(userService::insert);
+        router.post("/userService/insert").consumes("application/json").handler(userService::insert);
         return router;
     }
 
