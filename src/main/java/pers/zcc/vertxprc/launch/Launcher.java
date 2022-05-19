@@ -1,14 +1,16 @@
 package pers.zcc.vertxprc.launch;
 
-import io.vertx.rxjava3.core.Vertx;
-import pers.zcc.vertxprc.MainVerticle;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import pers.zcc.vertxprc.verticle.MainVerticle;
 
 public class Launcher {
-    static Vertx vertx;
 
     public static void main(String[] args) {
-        vertx = Vertx.vertx();
-        vertx.deployVerticle(MainVerticle.class.getName());
+        Vertx vertx = Vertx.vertx();
+        DeploymentOptions commonDeployOpts = new DeploymentOptions();
+        commonDeployOpts.setInstances(Runtime.getRuntime().availableProcessors() * 2 - 1);
+        vertx.deployVerticle(MainVerticle.class.getName(), commonDeployOpts);
     }
 
 }

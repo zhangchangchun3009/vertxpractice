@@ -14,17 +14,7 @@
   <loggers>  
     <logger name="pers.zcc.**.dao" level="debug" additivity="false">
       <appender-ref ref="Console"/>
-      <appender-ref ref="RollingFile"/> 
-    </logger>
-    
-    <logger name="org.springframework" level="info" additivity="false">
-      <appender-ref ref="Console"/>
-      <appender-ref ref="RollingFile"/> 
-    </logger>
-    
-    <logger name="org.apache" level="info" additivity="false">
-      <appender-ref ref="Console"/>
-      <appender-ref ref="RollingFile"/> 
+      <appender-ref ref="RollingFile"/>
     </logger>
     
     <logger name="org.mybatis" level="info" additivity="false">
@@ -33,11 +23,6 @@
     </logger>
     
     <logger name="io.netty" level="info" additivity="false">
-      <appender-ref ref="Console"/>
-      <appender-ref ref="RollingFile"/> 
-    </logger>
-    
-    <logger name="com.digitalpetri" level="info" additivity="false">
       <appender-ref ref="Console"/>
       <appender-ref ref="RollingFile"/> 
     </logger>

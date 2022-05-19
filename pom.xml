@@ -22,7 +22,7 @@
     <vertx.version>4.3.0</vertx.version>
     <junit-jupiter.version>5.7.0</junit-jupiter.version>
 
-    <main.verticle>pers.zcc.vertxprc.MainVerticle</main.verticle>
+    <main.verticle>pers.zcc.vertxprc.verticle.MainVerticle</main.verticle>
     <launcher.class>io.vertx.core.Launcher</launcher.class>
   </properties>
 
