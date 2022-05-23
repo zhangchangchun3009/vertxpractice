@@ -1,4 +1,4 @@
-package pers.zcc.vertxprc.util;
+package pers.zcc.vertxprc.common.util;
 
 import java.io.File;
 import java.io.IOException;

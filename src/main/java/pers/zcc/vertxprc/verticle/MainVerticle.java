@@ -115,7 +115,13 @@ public class MainVerticle extends AbstractVerticle {
                                     LOGGER.info("HTTP server stop failed");
                                 });
                                 try {
-                                    stop();
+                                    vertx.close(res -> {
+                                        if (res.succeeded()) {
+                                            LOGGER.info("system exit");
+                                        } else {
+                                            LOGGER.info("vertx stop failed");
+                                        }
+                                    });
                                 } catch (Exception e) {
                                     LOGGER.info("vert.x stop failed,", e);
                                 }
@@ -135,14 +141,7 @@ public class MainVerticle extends AbstractVerticle {
 
     @Override
     public void stop() throws Exception {
-        vertx.close(res -> {
-            if (res.succeeded()) {
-                LOGGER.info("system exit");
-                System.exit(1);
-            } else {
-                LOGGER.info("vertx stop failed");
-            }
-        });
+
     }
 
 }

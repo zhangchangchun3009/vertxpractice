@@ -36,7 +36,7 @@ public class DbUtil {
                         failureHandler.handle(queryRes.cause());
                     }
                 });
-                db.close();
+                conn.close();
             } else {
                 LOGGER.error("get db Connection failed,{}", connRes.cause());
                 failureHandler.handle(connRes.cause());
@@ -57,7 +57,7 @@ public class DbUtil {
                         cu.close();
                     }).onFailure(failureHandler);
                 }).onFailure(failureHandler);
-                db.close();
+                conn.close();
             } else {
                 LOGGER.error("get db Connection failed,{}", connRes.cause());
                 failureHandler.handle(connRes.cause());
