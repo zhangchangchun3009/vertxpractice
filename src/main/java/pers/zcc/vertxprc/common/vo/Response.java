@@ -1,5 +1,5 @@
 
-package pers.zcc.vertxprc.vo;
+package pers.zcc.vertxprc.common.vo;
 
 import java.io.Serializable;
 

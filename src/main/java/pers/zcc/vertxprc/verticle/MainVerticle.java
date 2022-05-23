@@ -1,8 +1,6 @@
 package pers.zcc.vertxprc.verticle;
 
 import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,19 +17,21 @@ import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.web.Router;
+import io.vertx.mysqlclient.MySQLConnectOptions;
+import io.vertx.mysqlclient.MySQLPool;
+import io.vertx.sqlclient.PoolOptions;
+import pers.zcc.vertxprc.common.constant.Constants;
 import pers.zcc.vertxprc.router.MainRouter;
 
 public class MainVerticle extends AbstractVerticle {
 
-    public static final String APPLICATION_CONFIG = "applicationConfig";
-
-    private static LocalMap<String, Object> applicationConfig;
-
-    public static Map<String, Object> getApplicationConfig() {
-        return Collections.unmodifiableMap(applicationConfig);
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class);
+
+    private static MySQLPool dbPool;
+
+    public static MySQLPool getDbPool() {
+        return dbPool;
+    }
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
@@ -45,9 +45,12 @@ public class MainVerticle extends AbstractVerticle {
                 JsonObject config = config();
                 config.mergeIn(jsonObject, true);
                 SharedData sd = vertx.sharedData();
-                applicationConfig = sd.getLocalMap(APPLICATION_CONFIG);
+                LocalMap<String, Object> applicationConfig = sd.getLocalMap(Constants.APPLICATION_CONFIG);
                 applicationConfig.putAll(config.getMap());
-                HttpServer httpServer = createWebServer(startPromise, config);
+
+                dbPool = createDbConn(jsonObject);
+
+                HttpServer httpServer = createWebServer(startPromise, config, dbPool);
 
                 listenOnShutdownSocket(httpServer, config, startPromise);
             } else {
@@ -57,8 +60,22 @@ public class MainVerticle extends AbstractVerticle {
 
     }
 
-    private HttpServer createWebServer(Promise<Void> startPromise, JsonObject config) {
-        Router mainRouter = new MainRouter(config).getRouter(vertx);
+    private MySQLPool createDbConn(JsonObject jsonObject) {
+        PoolOptions dbPoolConfig = new PoolOptions();
+        dbPoolConfig.setPoolCleanerPeriod(jsonObject.getInteger("db.mysql.pool.cleanerPeriod"));//连接压力大时缩减
+        dbPoolConfig.setMaxSize(jsonObject.getInteger("db.mysql.pool.maxSize"));//最大连接数
+        dbPoolConfig.setMaxWaitQueueSize(jsonObject.getInteger("db.mysql.pool.maxWaitQueueSize"));
+        dbPoolConfig.setName("mysqlDB");
+        dbPoolConfig.setShared(true);
+        String connectionUri = jsonObject.getString("db.mysql.uri");
+        MySQLConnectOptions connectOptions = MySQLConnectOptions.fromUri(connectionUri);
+        connectOptions.setUser(jsonObject.getString("db.mysql.username"));
+        connectOptions.setPassword(jsonObject.getString("db.mysql.password"));
+        return MySQLPool.pool(vertx, connectOptions, dbPoolConfig);
+    }
+
+    private HttpServer createWebServer(Promise<Void> startPromise, JsonObject config, MySQLPool dbPool) {
+        Router mainRouter = new MainRouter(config, dbPool).getRouter(vertx);
         int port = config.getInteger("server.port");
         HttpServerOptions options = new HttpServerOptions();
         options.setPort(port);
@@ -127,4 +144,5 @@ public class MainVerticle extends AbstractVerticle {
             }
         });
     }
+
 }
