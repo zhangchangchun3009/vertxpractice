@@ -7,6 +7,8 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.shareddata.LocalMap;
+import io.vertx.ext.auth.JWTOptions;
+import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.sqlclient.Tuple;
 import pers.zcc.vertxprc.common.constant.Constants;
@@ -47,5 +49,40 @@ public class UserService {
                     routingcontext.fail(500, err);
                 });
 
+    }
+
+    public void login(RoutingContext ctx) {
+        String username = ctx.queryParam("username").get(0);
+        String password = ctx.queryParam("password").get(0);
+        String encPass = password + "admin";
+        DbUtil.query(ctx,
+                "select user_id as userid, user_name as username from sys_user where user_name=? and password=? limit 1",
+                Tuple.of(username, encPass), row -> {
+                    int cnt = row.size();
+                    if (cnt == 0) {
+                        return null;
+                    }
+                    Map<String, Object> user = new HashMap<String, Object>();
+                    user.put("username", username);
+                    user.put("userid", row.getInteger("userid"));
+                    return user;
+                }, rowset -> {
+                    Map<String, Object> dbuser = null;
+                    if (rowset.iterator().hasNext()) {
+                        dbuser = rowset.iterator().next();
+                    }
+                    if (dbuser != null) {
+                        JWTAuth jwt = ctx.get("jwt");
+                        ctx.end(jwt.generateToken(
+                                new JsonObject().put("username", dbuser.get("username")).put("userid",
+                                        dbuser.get("userid")),
+                                new JWTOptions().setAlgorithm("RS256").setExpiresInMinutes(30).setIssuer("vertxprac")
+                                        .setNoTimestamp(false).setSubject("auth")));
+                    } else {
+                        ctx.fail(403);
+                    }
+                }, err -> {
+                    ctx.fail(500, err);
+                });
     }
 }

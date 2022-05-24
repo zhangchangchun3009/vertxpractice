@@ -33,13 +33,19 @@ public class MainRouter implements IRouterCreator {
     public Router getRouter(Vertx vertx) {
         String webContextPath = config.getString("server.contextPath");
         Router router = Router.router(vertx);
+        router.errorHandler(401, ctx -> {
+            ctx.json(new Response<Void>().fail("401", "not authorized"));
+        }).errorHandler(403, ctx -> {
+            ctx.json(new Response<Void>().fail("403", "no privillege"));
+        }).errorHandler(500, ctx -> {
+            LOGGER.error("uncaught exception,", ctx.failure());
+            ctx.json(new Response<Void>().fail("500", "server internal error"));
+        });
+
         router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx))).handler(ctx -> {
             ctx.put(Constants.APPLICATION_CONFIG, config);
             ctx.put(Constants.MYSQL_POOL, dbPool);
             ctx.next();
-        }).failureHandler(ctx -> {
-            LOGGER.error("uncaught exception,", ctx.failure());
-            ctx.json(new Response<String>().fail("500", "server internal error"));
         });
 
         router.route().handler(CorsHandler.create("vertx.io").allowedMethod(HttpMethod.GET));
