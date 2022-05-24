@@ -76,7 +76,7 @@ public class UserService {
                             dbuser = rowset.iterator().next();
                         }
                         if (dbuser != null) {
-                            JWTAuth jwt = ctx.get("jwt");
+                            JWTAuth jwt = ctx.get(Constants.JWT_AUTH);
                             ctx.end(jwt.generateToken(
                                     new JsonObject().put("username", dbuser.get("username")).put("userid",
                                             dbuser.get("userid")),

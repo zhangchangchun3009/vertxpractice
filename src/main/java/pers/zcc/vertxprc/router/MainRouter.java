@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.KeyStoreOptions;
+import io.vertx.ext.auth.jwt.JWTAuth;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.LanguageHeader;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CorsHandler;
@@ -42,9 +45,16 @@ public class MainRouter implements IRouterCreator {
             ctx.json(new Response<Void>().fail("500", "server internal error"));
         });
 
+        JWTAuthOptions jwtConfig = new JWTAuthOptions()
+                .setKeyStore(new KeyStoreOptions().setPath(config.getString("auth.jwt.keystore.path"))
+                        .setPassword(config.getString("auth.jwt.keystore.password"))
+                        .setType(config.getString("auth.jwt.keystore.type")));
+        JWTAuth jwt = JWTAuth.create(vertx, jwtConfig);
+
         router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx))).handler(ctx -> {
             ctx.put(Constants.APPLICATION_CONFIG, config);
             ctx.put(Constants.MYSQL_POOL, dbPool);
+            ctx.put(Constants.JWT_AUTH, jwt);
             ctx.next();
         });
 
