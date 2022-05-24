@@ -8,14 +8,11 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.LanguageHeader;
 import io.vertx.ext.web.Router;
-import io.vertx.ext.web.common.template.TemplateEngine;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.FaviconHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
-import io.vertx.ext.web.handler.TemplateHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine;
 import io.vertx.mysqlclient.MySQLPool;
 import pers.zcc.vertxprc.common.constant.Constants;
 import pers.zcc.vertxprc.common.vo.Response;
@@ -50,17 +47,7 @@ public class MainRouter implements IRouterCreator {
 
         StaticHandler staticHandler = StaticHandler.create("webroot");
         staticHandler.setIndexPage("index.html");
-        router.route("/").handler(staticHandler);
-
-        router.route("/static/*").handler(staticHandler);
-
-        TemplateEngine engine = FreeMarkerTemplateEngine.create(vertx);
-
-        router.route("/dynamic/*").handler(ctx -> {
-            ctx.data().put("name", ctx.request().getParam("name"));
-            ctx.data().put("site", "vert.x");
-            ctx.next();
-        }).handler(TemplateHandler.create(engine));
+        router.route("/").handler(staticHandler); // any visit of not existed static resource is redirect to index.html
 
         router.get("/localized").handler(rc -> {
             //虽然通过一个 switch 循环有点奇怪，我们必须按顺序选择正确的本地化方式
@@ -87,6 +74,8 @@ public class MainRouter implements IRouterCreator {
             rc.response().end("Sorry we don't speak: " + rc.preferredLanguage());
         });
 
+        router.route(webContextPath + "/static/*").handler(staticHandler);
+        router.route(webContextPath + "/dynamic/*").subRouter(new TemplateRouter().getRouter(vertx));
         router.route(webContextPath + "/services/*").subRouter(new InternalServiceRouter().getRouter(vertx));
         router.route(webContextPath + "/publicservices/*").subRouter(new PublicServiceRouter().getRouter(vertx));
         return router;
