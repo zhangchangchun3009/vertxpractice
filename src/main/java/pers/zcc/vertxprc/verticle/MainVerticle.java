@@ -77,14 +77,17 @@ public class MainVerticle extends AbstractVerticle {
 
     private HttpServer createWebServer(Promise<Void> startPromise, JsonObject config, MySQLPool dbPool) {
         Router mainRouter = new MainRouter(config, dbPool).getRouter(vertx);
-        int httpsPort = config.getInteger("server.httpsPort");
-        int httpPort = config.getInteger("server.httpPort");
+        int httpsPort = config.getInteger("server.https.port");
+        int httpPort = config.getInteger("server.http.port");
         HttpServerOptions options = new HttpServerOptions();
         options.setPort(httpsPort);
         options.setTcpKeepAlive(true);
         options.setSsl(true);
         JksOptions keystoreOptions = new JksOptions();
-        keystoreOptions.setPath("https.jks").setPassword("zccadmin").setAlias("https").setAliasPassword("zccadmin");
+        keystoreOptions.setPath(config.getString("server.https.keystore.path"))
+                .setPassword(config.getString("server.https.keystore.password"))
+                .setAlias(config.getString("server.https.keystore.alias"))
+                .setAliasPassword(config.getString("server.https.keystore.aliaspassword"));
         options.setKeyStoreOptions(keystoreOptions);
         options.setHandle100ContinueAutomatically(true);
         options.setWriteIdleTimeout(config.getInteger("server.writeIdleTimeout")); //socket写超时（接口响应超时）
