@@ -16,8 +16,9 @@ import io.vertx.ext.web.handler.FaviconHandler;
 import io.vertx.ext.web.handler.SessionHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.sstore.LocalSessionStore;
-import io.vertx.mysqlclient.MySQLPool;
 import pers.zcc.vertxprc.common.constant.Constants;
+import pers.zcc.vertxprc.common.util.MongoDbUtil;
+import pers.zcc.vertxprc.common.util.MysqlDbUtil;
 import pers.zcc.vertxprc.common.vo.Response;
 
 public class MainRouter implements IRouterCreator {
@@ -25,11 +26,8 @@ public class MainRouter implements IRouterCreator {
 
     private final JsonObject config;
 
-    private final MySQLPool dbPool;
-
-    public MainRouter(JsonObject config, MySQLPool dbPool) {
+    public MainRouter(JsonObject config) {
         this.config = config;
-        this.dbPool = dbPool;
     }
 
     @Override
@@ -53,7 +51,8 @@ public class MainRouter implements IRouterCreator {
 
         router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx))).handler(ctx -> {
             ctx.put(Constants.APPLICATION_CONFIG, config);
-            ctx.put(Constants.MYSQL_POOL, dbPool);
+            ctx.put(Constants.MYSQL_POOL, MysqlDbUtil.getConnectionPool());
+            ctx.put(Constants.MONGODB_POOL, MongoDbUtil.getConnectionPool());
             ctx.put(Constants.JWT_AUTH, jwt);
             ctx.next();
         });

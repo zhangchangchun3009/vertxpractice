@@ -15,9 +15,25 @@ import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.Tuple;
 import pers.zcc.vertxprc.common.constant.Constants;
 
-public class DbUtil {
+public class MysqlDbUtil {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MysqlDbUtil.class);
+
+    private static MySQLPool mysqlDbPool;
+
+    /**
+     * <p>don't call this method!
+     * <p>Sets the pool.
+     *
+     * @param mysqlDbPool
+     */
+    public static void setPool(MySQLPool mysqlDbPool) {
+        MysqlDbUtil.mysqlDbPool = mysqlDbPool;
+    }
+
+    public static MySQLPool getConnectionPool() {
+        return mysqlDbPool;
+    }
 
     public static MySQLPool getConnectionPool(RoutingContext routingcontext) {
         return routingcontext.get(Constants.MYSQL_POOL);
@@ -25,7 +41,7 @@ public class DbUtil {
 
     public static <U> void query(RoutingContext routingcontext, String sql, Tuple tuple, Function<Row, U> mapper,
             Handler<RowSet<U>> successHandler, Handler<Throwable> failureHandler) {
-        MySQLPool db = routingcontext.get(Constants.MYSQL_POOL);
+        MySQLPool db = getConnectionPool();
         db.getConnection(connRes -> {
             if (connRes.succeeded()) {
                 SqlConnection conn = connRes.result();
@@ -46,7 +62,7 @@ public class DbUtil {
 
     public static <U> void update(RoutingContext routingcontext, String sql, Tuple tuple, Function<Row, U> mapper,
             Handler<Integer> successHandler, Handler<Throwable> failureHandler) {
-        MySQLPool db = routingcontext.get(Constants.MYSQL_POOL);
+        MySQLPool db = getConnectionPool();
         db.getConnection(connRes -> {
             if (connRes.succeeded()) {
                 SqlConnection conn = connRes.result();

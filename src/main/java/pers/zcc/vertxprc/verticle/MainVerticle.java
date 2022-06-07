@@ -17,22 +17,19 @@ import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.PoolOptions;
 import pers.zcc.vertxprc.common.constant.Constants;
+import pers.zcc.vertxprc.common.util.MongoDbUtil;
+import pers.zcc.vertxprc.common.util.MysqlDbUtil;
 import pers.zcc.vertxprc.router.MainRouter;
 
 public class MainVerticle extends AbstractVerticle {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MainVerticle.class);
-
-    private static MySQLPool dbPool;
-
-    public static MySQLPool getDbPool() {
-        return dbPool;
-    }
 
     @Override
     public void start(Promise<Void> startPromise) throws Exception {
@@ -49,9 +46,13 @@ public class MainVerticle extends AbstractVerticle {
                 LocalMap<String, Object> applicationConfig = sd.getLocalMap(Constants.APPLICATION_CONFIG);
                 applicationConfig.putAll(config.getMap());
 
-                dbPool = createDbConn(jsonObject);
+                MySQLPool mysqlDbPool = createMysqlDbConn(jsonObject);
+                MysqlDbUtil.setPool(mysqlDbPool);
 
-                HttpServer httpServer = createWebServer(startPromise, config, dbPool);
+                MongoClient mongoDbPool = createMongoDbConn(jsonObject);
+                MongoDbUtil.setPool(mongoDbPool);
+
+                HttpServer httpServer = createWebServer(startPromise, config);
 
                 listenOnShutdownSocket(httpServer, config, startPromise);
             } else {
@@ -61,7 +62,17 @@ public class MainVerticle extends AbstractVerticle {
 
     }
 
-    private MySQLPool createDbConn(JsonObject jsonObject) {
+    private MongoClient createMongoDbConn(JsonObject jsonObject) {
+        String connectionString = jsonObject.getString("db.mongodb.uri");
+        MongoClient mongoClient = MongoClient.createShared(vertx,
+                new JsonObject().put("useObjectId", jsonObject.getBoolean("db.mongodb.useObjectId", false))
+                        .put("db_name", jsonObject.getString("db.mongodb.defaultDB", "test"))
+                        .put("connection_string", connectionString),
+                "mongoDB");
+        return mongoClient;
+    }
+
+    private MySQLPool createMysqlDbConn(JsonObject jsonObject) {
         PoolOptions dbPoolConfig = new PoolOptions();
         dbPoolConfig.setPoolCleanerPeriod(jsonObject.getInteger("db.mysql.pool.cleanerPeriod"));//连接压力大时缩减
         dbPoolConfig.setMaxSize(jsonObject.getInteger("db.mysql.pool.maxSize"));//最大连接数
@@ -75,8 +86,8 @@ public class MainVerticle extends AbstractVerticle {
         return MySQLPool.pool(vertx, connectOptions, dbPoolConfig);
     }
 
-    private HttpServer createWebServer(Promise<Void> startPromise, JsonObject config, MySQLPool dbPool) {
-        Router mainRouter = new MainRouter(config, dbPool).getRouter(vertx);
+    private HttpServer createWebServer(Promise<Void> startPromise, JsonObject config) {
+        Router mainRouter = new MainRouter(config).getRouter(vertx);
         int httpsPort = config.getInteger("server.https.port");
         int httpPort = config.getInteger("server.http.port");
         HttpServerOptions options = new HttpServerOptions();

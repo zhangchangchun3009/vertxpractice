@@ -17,7 +17,7 @@
       <appender-ref ref="RollingFile"/>
     </logger>
     
-    <logger name="org.mybatis" level="info" additivity="false">
+    <logger name="com.mongodb.diagnostics.logging.SLF4JLogger" level="info" additivity="false">
       <appender-ref ref="Console"/>
       <appender-ref ref="RollingFile"/> 
     </logger>

@@ -6,6 +6,8 @@ public interface Constants {
 
     String MYSQL_POOL = "mysqlPool";
 
+    String MONGODB_POOL = "mongodbPool";
+
     String JWT_AUTH = "jwt";
 
 }

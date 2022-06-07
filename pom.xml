@@ -20,7 +20,7 @@
     <exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
 
     <vertx.version>4.3.0</vertx.version>
-    <junit-jupiter.version>5.7.0</junit-jupiter.version>
+    <junit-jupiter.version>5.8.2</junit-jupiter.version>
     <log4j.version>2.17.1</log4j.version>
 
     <main.verticle>pers.zcc.vertxprc.verticle.MainVerticle</main.verticle>
@@ -108,6 +108,10 @@
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
+      <artifactId>vertx-mongo-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
       <artifactId>vertx-json-schema</artifactId>
     </dependency>
     <dependency>
@@ -123,6 +127,17 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-api-contract</artifactId>
+      <exclusions>
+      	<exclusion>
+      		<groupId>org.apache.commons</groupId>
+      		<artifactId>commons-lang3</artifactId>
+      	</exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.7</version>
     </dependency>
 <!--     <dependency>
       <groupId>io.vertx</groupId>
