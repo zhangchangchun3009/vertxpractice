@@ -6,10 +6,10 @@ import io.vertx.ext.web.Router;
 
 public class InternalServiceRouter implements IRouterCreator {
     @Override
-    public Router getRouter(Vertx vertx) {
+    public Router createRouter(Vertx vertx) {
         Router router = Router.router(vertx);
         Route rout = router.route("/*");
-        rout.subRouter(new UserServiceRouter().getRouter(vertx));
+        rout.subRouter(new UserServiceRouter().createRouter(vertx));
         return router;
     }
 }

@@ -9,7 +9,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.KeyStoreOptions;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
-import io.vertx.ext.web.LanguageHeader;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.FaviconHandler;
@@ -20,6 +19,7 @@ import pers.zcc.vertxprc.common.constant.Constants;
 import pers.zcc.vertxprc.common.util.MongoDbUtil;
 import pers.zcc.vertxprc.common.util.MysqlDbUtil;
 import pers.zcc.vertxprc.common.vo.Response;
+import pers.zcc.vertxprc.router.handler.LocalLanguageHandler;
 
 public class MainRouter implements IRouterCreator {
     private static final Logger LOGGER = LoggerFactory.getLogger(MainRouter.class);
@@ -31,7 +31,7 @@ public class MainRouter implements IRouterCreator {
     }
 
     @Override
-    public Router getRouter(Vertx vertx) {
+    public Router createRouter(Vertx vertx) {
         String webContextPath = config.getString("server.contextPath");
         Router router = Router.router(vertx);
         router.errorHandler(401, ctx -> {
@@ -43,11 +43,7 @@ public class MainRouter implements IRouterCreator {
             ctx.json(new Response<Void>().fail("500", "server internal error"));
         });
 
-        JWTAuthOptions jwtConfig = new JWTAuthOptions()
-                .setKeyStore(new KeyStoreOptions().setPath(config.getString("auth.jwt.keystore.path"))
-                        .setPassword(config.getString("auth.jwt.keystore.password"))
-                        .setType(config.getString("auth.jwt.keystore.type")));
-        JWTAuth jwt = JWTAuth.create(vertx, jwtConfig);
+        JWTAuth jwt = createJWTAuth(vertx);
 
         router.route().handler(SessionHandler.create(LocalSessionStore.create(vertx))).handler(ctx -> {
             ctx.put(Constants.APPLICATION_CONFIG, config);
@@ -64,36 +60,22 @@ public class MainRouter implements IRouterCreator {
         staticHandler.setIndexPage("index.html");
         router.route("/").handler(staticHandler); // any visit of not existed static resource is redirect to index.html
 
-        router.get("/localized").handler(rc -> {
-            //虽然通过一个 switch 循环有点奇怪，我们必须按顺序选择正确的本地化方式
-            for (LanguageHeader language : rc.acceptableLanguages()) {
-                switch (language.tag()) {
-                case "zh":
-                    rc.response().putHeader("content-type", "text/plain;charset=utf-8").end("你好！");
-                    return;
-                case "en":
-                    rc.response().end("Hello!");
-                    return;
-                case "fr":
-                    rc.response().end("Bonjour!");
-                    return;
-                case "pt":
-                    rc.response().end("Olá!");
-                    return;
-                case "es":
-                    rc.response().end("Hola!");
-                    return;
-                }
-            }
-            // 我们不知道用户的语言，因此返回这个信息：
-            rc.response().end("Sorry we don't speak: " + rc.preferredLanguage());
-        });
+        router.get("/localized").handler(new LocalLanguageHandler());
 
         router.route(webContextPath + "/static/*").handler(staticHandler);
-        router.route(webContextPath + "/dynamic/*").subRouter(new TemplateRouter().getRouter(vertx));
-        router.route(webContextPath + "/services/*").subRouter(new InternalServiceRouter().getRouter(vertx));
-        router.route(webContextPath + "/publicservices/*").subRouter(new PublicServiceRouter().getRouter(vertx));
+        router.route(webContextPath + "/dynamic/*").subRouter(new TemplateRouter().createRouter(vertx));
+        router.route(webContextPath + "/services/*").subRouter(new InternalServiceRouter().createRouter(vertx));
+        router.route(webContextPath + "/publicservices/*").subRouter(new PublicServiceRouter().createRouter(vertx));
         return router;
+    }
+
+    private JWTAuth createJWTAuth(Vertx vertx) {
+        JWTAuthOptions jwtConfig = new JWTAuthOptions()
+                .setKeyStore(new KeyStoreOptions().setPath(config.getString("auth.jwt.keystore.path"))
+                        .setPassword(config.getString("auth.jwt.keystore.password"))
+                        .setType(config.getString("auth.jwt.keystore.type")));
+        JWTAuth jwt = JWTAuth.create(vertx, jwtConfig);
+        return jwt;
     }
 
 }

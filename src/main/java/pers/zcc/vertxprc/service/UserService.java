@@ -19,6 +19,13 @@ import pers.zcc.vertxprc.common.util.CipherUtil;
 import pers.zcc.vertxprc.common.util.MongoDbUtil;
 import pers.zcc.vertxprc.common.util.MysqlDbUtil;
 
+/**
+ * The Class UserService.
+ * sample to code a business service.
+ * but the login service plays an important part in a web frame and some code of it could be treated seriously.
+ * @author zhangchangchun
+ * @Date 2022年6月8日
+ */
 public class UserService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);

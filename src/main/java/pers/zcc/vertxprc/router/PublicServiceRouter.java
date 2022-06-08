@@ -6,7 +6,7 @@ import io.vertx.ext.web.Router;
 
 public class PublicServiceRouter implements IRouterCreator {
     @Override
-    public Router getRouter(Vertx vertx) {
+    public Router createRouter(Vertx vertx) {
         Router router = Router.router(vertx);
         Route rout = router.route("/*");
         rout.handler(ctx -> {

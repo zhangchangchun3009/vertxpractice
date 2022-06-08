@@ -9,7 +9,7 @@ import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine;
 public class TemplateRouter implements IRouterCreator {
 
     @Override
-    public Router getRouter(Vertx vertx) {
+    public Router createRouter(Vertx vertx) {
         Router router = Router.router(vertx);
         TemplateEngine engine = FreeMarkerTemplateEngine.create(vertx);
         router.get("/Hello.ftl").handler(ctx -> {

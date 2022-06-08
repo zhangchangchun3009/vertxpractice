@@ -18,7 +18,6 @@ import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.shareddata.LocalMap;
 import io.vertx.core.shareddata.SharedData;
 import io.vertx.ext.mongo.MongoClient;
-import io.vertx.ext.web.Router;
 import io.vertx.mysqlclient.MySQLConnectOptions;
 import io.vertx.mysqlclient.MySQLPool;
 import io.vertx.sqlclient.PoolOptions;
@@ -87,9 +86,7 @@ public class MainVerticle extends AbstractVerticle {
     }
 
     private HttpServer createWebServer(Promise<Void> startPromise, JsonObject config) {
-        Router mainRouter = new MainRouter(config).getRouter(vertx);
         int httpsPort = config.getInteger("server.https.port");
-        int httpPort = config.getInteger("server.http.port");
         HttpServerOptions options = new HttpServerOptions();
         options.setPort(httpsPort);
         options.setTcpKeepAlive(true);
@@ -103,31 +100,32 @@ public class MainVerticle extends AbstractVerticle {
         options.setHandle100ContinueAutomatically(true);
         options.setWriteIdleTimeout(config.getInteger("server.writeIdleTimeout")); //socket写超时（接口响应超时）
         options.setIdleTimeout(config.getInteger("server.idleTimeout"));//关闭keepalive连接的时间，默认是不会关闭的
-        HttpServer httpServer = vertx.createHttpServer(options);
-        httpServer.requestHandler(mainRouter).exceptionHandler(e -> {
+        HttpServer httpsServer = vertx.createHttpServer(options);
+        httpsServer.requestHandler(new MainRouter(config).createRouter(vertx)).exceptionHandler(e -> {
             LOGGER.error("socket exception logged,", e);
         }).webSocketHandler(websocket -> {
             LOGGER.info(websocket.path());
             websocket.writeTextMessage("hellow");
-        }).listen(httpsPort, http -> {
-            if (http.succeeded()) {
+        }).listen(httpsPort, https -> {
+            if (https.succeeded()) {
+                int httpPort = config.getInteger("server.http.port");
                 vertx.createHttpServer().requestHandler(req -> {
                     req.response().putHeader("location",
                             "https://" + req.host().substring(0, req.host().indexOf(":")) + ":" + httpsPort + req.uri())
                             .setStatusCode(302).end();
-                }).listen(httpPort, res -> {
+                }).listen(httpPort, http -> {
                     LOGGER.info(
-                            "HTTP server started on port: {}, context path: {}. Any request of http connection will be redirect to https connection",
+                            "HTTP server started on port: {}, context path: {}. Any request of http connection will be redirected to https connection",
                             httpPort, config.getString("server.contextPath"));
                 });
                 startPromise.complete();
                 LOGGER.info("HTTPS server started on port: {}, context path: {}", httpsPort,
                         config.getString("server.contextPath"));
             } else {
-                startPromise.fail(http.cause());
+                startPromise.fail(https.cause());
             }
         });
-        return httpServer;
+        return httpsServer;
     }
 
     private void listenOnShutdownSocket(HttpServer httpServer, JsonObject config, Promise<Void> startPromise) {
