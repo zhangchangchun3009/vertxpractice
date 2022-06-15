@@ -4,7 +4,11 @@ image:https://img.shields.io/badge/vert.x-4.3.0-purple.svg[link="https://vertx.i
 
 This application was generated using http://start.vertx.io
 
-== Building
+* vert.x learning. 
+* This project has contained main necessary modules in a web application development.
+* It doesn't support cluster mode yet.
+
+== mvnw Building
 
 To launch your tests:
 ```
@@ -27,5 +31,17 @@ To run your application:
 * https://stackoverflow.com/questions/tagged/vert.x?sort=newest&pageSize=15[Vert.x Stack Overflow]
 * https://groups.google.com/forum/?fromgroups#!forum/vertx[Vert.x User Group]
 * https://gitter.im/eclipse-vertx/vertx-users[Vert.x Gitter]
+
+== RUN
+
+* develop mode: 
+    ** run class 'pers.zcc.vertxprc.launch.Launcher'
+* docker deploy:
+    ** mvn clean install 
+    ** docker build --tag vertxpractice .
+    ** docker network create vertxp
+    ** docker run --rm -d --network vertxp --network-alias vertxp-mysql --name vertxp-mysql -v verxp-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=admin -e MYSQL_DATABASE=vertxp mysql:8.0.29
+     ** docker run --rm -d --network vertxp --network-alias vertxp-mongodb -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=admin --name vertxp-mongodb mongo:latest
+     ** docker run --rm --network vertxp --network-alias vertxprac -d -p 8888:8888 -p 8880:8880 --name vertxprac vertxpractice:latest
 
 
