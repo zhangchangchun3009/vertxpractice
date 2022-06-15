@@ -10,7 +10,7 @@ COPY target/$VERTICLE_FILE $VERTICLE_HOME/
 WORKDIR $VERTICLE_HOME
 ENV VERTX_ID=vertxpractice
 ENV INSTANCES=10
-ENV DB_MYSQL_URI=mysql://verxp-mysql:3306/vertxp?useSSL=false&allowMultiQueries=true
+ENV DB_MYSQL_URI=mysql://vertxp-mysql:3306/vertxp?useSSL=false&allowMultiQueries=true
 ENV DB_MYSQL_USERNAME=develop
 ENV DB_MYSQL_PASSWORD=admin
 ENV DB_MONGO_URI=mongodb://root:admin@vertxp-mongodb:27017/?connectTimeoutMS=30000&maxPoolSize=500
