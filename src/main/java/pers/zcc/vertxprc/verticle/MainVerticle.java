@@ -39,12 +39,12 @@ public class MainVerticle extends AbstractVerticle {
         configRetriever.getConfig(res -> {
             if (res.succeeded()) {
                 JsonObject jsonObject = res.result();
+                jsonObject = new AppConfig(jsonObject).finalView();
                 JsonObject config = config();
                 config.mergeIn(jsonObject, true);
                 SharedData sd = vertx.sharedData();
                 LocalMap<String, Object> applicationConfig = sd.getLocalMap(Constants.APPLICATION_CONFIG);
                 applicationConfig.putAll(config.getMap());
-
                 MySQLPool mysqlDbPool = createMysqlDbConn(jsonObject);
                 MysqlDbUtil.setPool(mysqlDbPool);
 
@@ -170,6 +170,63 @@ public class MainVerticle extends AbstractVerticle {
     @Override
     public void stop() throws Exception {
 
+    }
+
+    public class AppConfig {
+        private JsonObject innerConfig;
+
+        public AppConfig(JsonObject innerConfig) {
+            this.innerConfig = innerConfig;
+        }
+
+        public String getString(String key, String defaultValue) {
+            return isStringNotNull(System.getProperty(key)) ? System.getProperty(key)
+                    : isStringNotNull(System.getenv(key)) ? System.getenv(key)
+                            : isStringNotNull(innerConfig.getString(key)) ? innerConfig.getString(key) : defaultValue;
+        }
+
+        public int getInteger(String key, int defaultValue) {
+            String value = getString(key, null);
+            return isStringNotNull(value) ? Integer.parseInt(value) : defaultValue;
+        }
+
+        public long getLong(String key, long defaultValue) {
+            String value = getString(key, null);
+            return isStringNotNull(value) ? Long.parseLong(value) : defaultValue;
+        }
+
+        public boolean getBoolean(String key, boolean defaultValue) {
+            return isStringNotNull(System.getProperty(key)) ? Boolean.parseBoolean(System.getProperty(key))
+                    : isStringNotNull(System.getenv(key)) ? Boolean.parseBoolean(System.getenv(key))
+                            : innerConfig.getBoolean(key, defaultValue);
+        }
+
+        public JsonObject finalView() {
+            final JsonObject view = new JsonObject();
+            innerConfig.forEach((entry) -> {
+                Object orgValue = entry.getValue();
+                if (orgValue instanceof String) {
+                    view.put(entry.getKey(), getString(entry.getKey(), (String) orgValue));
+                } else if (orgValue instanceof Integer) {
+                    view.put(entry.getKey(), getInteger(entry.getKey(), (Integer) orgValue));
+                } else if (orgValue instanceof Long) {
+                    view.put(entry.getKey(), getLong(entry.getKey(), (Long) orgValue));
+                } else if (orgValue instanceof Boolean) {
+                    view.put(entry.getKey(), getBoolean(entry.getKey(), (Boolean) orgValue));
+                } else {
+                    view.put(entry.getKey(), orgValue);
+                }
+            });
+            return view;
+        }
+
+        public String getActiveProfile() {
+            return getString("spring.profiles.active", null);
+        }
+
+        private boolean isStringNotNull(String str) {
+            return str != null && !"".equals(str);
+        }
     }
 
 }
